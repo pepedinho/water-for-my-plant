@@ -1,0 +1,36 @@
+{
+    "configurations": [
+        {
+            "name": "Linux",
+            "includePath": [
+                "${workspaceFolder}/**",
+                "/home/pepe/esp/esp-idf/components/**",
+                "/home/pepe/esp/esp-idf/components/hal/include/**",
+                "/home/pepe/esp/esp-idf/components/hal/include/hal",
+                "/home/pepe/esp/esp-idf/components/freertos/",
+                "/home/pepe/esp/esp-idf/components/driver/",
+                "/home/pepe/esp/esp-idf/components/freertos/FreeRTOS-Kernel/include",
+                "/home/pepe/esp/esp-idf/components/esp_adc",
+                "/home/pepe/esp/esp-idf/components/esp_adc/include"
+
+            ],
+            "defines": [],
+            "cStandard": "c17",
+            "cppStandard": "c++14",
+            "intelliSenseMode": "linux-clang-x64"
+        },
+        {
+            "name": "ESP32",
+            "includePath": [
+                "${workspaceFolder}/main",
+                "${env:IDF_PATH}/components/**"
+            ],
+            "defines": [],
+            "compilerPath": "/usr/bin/clang", // ou gcc si tu veux
+            "cStandard": "c11",
+            "cppStandard": "c++17",
+            "intelliSenseMode": "linux-gcc-x64"
+        }
+    ],
+    "version": 4
+}

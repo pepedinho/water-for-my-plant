@@ -1,0 +1,7 @@
+{
+    "files.associations": {
+        "adc_cali.h": "c",
+        "adc_oneshot.h": "c",
+        "esp_log.h": "c"
+    }
+}
