@@ -80,6 +80,7 @@ void app_main(void) {
 
     adc_init();
 
+    ssd1306_clear_screen(&dev, false);
     while (1) {
         display_soil_value(&dev);
         vTaskDelay(200);
