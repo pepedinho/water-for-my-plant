@@ -23,7 +23,8 @@
 adc_oneshot_unit_handle_t adc_handle;
 
 void display_msg(char *msg, SSD1306_t *dev, bool f) {
-    ssd1306_clear_screen(dev, false);
+    // ssd1306_clear_screen(dev, false);
+    ssd1306_display_text(dev, 0, "                ", 16, false); // clear current line
     ssd1306_display_text(dev, 0, msg, strlen(msg), false);
     if (f)
         free(msg);
@@ -81,7 +82,7 @@ void app_main(void) {
 
     while (1) {
         display_soil_value(&dev);
-        vTaskDelay(1000);
+        vTaskDelay(200);
     }
     display_msg("18%", &dev, 0);
 }
