@@ -5,6 +5,7 @@
 #include "driver/i2c.h"
 #include "ssd1306.h"
 #include "esp_log.h"
+#include "driver/ledc.h"
 
 #define OLED_SDA 21
 #define OLED_SCL 22
@@ -22,10 +23,38 @@
 
 adc_oneshot_unit_handle_t adc_handle;
 
-void display_msg(char *msg, SSD1306_t *dev, bool f) {
+
+#define SERVO_PIN 18          // servo pin (PWM)
+#define SERVO_FORWARD 3277 // rotation sens A
+#define SERVO_BACKWARD 6553 // rotation sens B
+#define SERVO_STOP 4915  
+
+void move_xms(int duration_ms) {
+    // ouverture
+    ledc_set_duty(LEDC_LOW_SPEED_MODE, LEDC_CHANNEL_0, SERVO_FORWARD);
+    ledc_update_duty(LEDC_LOW_SPEED_MODE, LEDC_CHANNEL_0);
+    vTaskDelay(pdMS_TO_TICKS(duration_ms));
+
+    // stop
+    ledc_set_duty(LEDC_LOW_SPEED_MODE, LEDC_CHANNEL_0, SERVO_STOP);
+    ledc_update_duty(LEDC_LOW_SPEED_MODE, LEDC_CHANNEL_0);
+}
+
+void return_xms(int duration_ms) {
+    // retour
+    ledc_set_duty(LEDC_LOW_SPEED_MODE, LEDC_CHANNEL_0, SERVO_BACKWARD);
+    ledc_update_duty(LEDC_LOW_SPEED_MODE, LEDC_CHANNEL_0);
+    vTaskDelay(pdMS_TO_TICKS(duration_ms));
+
+    // stop
+    ledc_set_duty(LEDC_LOW_SPEED_MODE, LEDC_CHANNEL_0, SERVO_STOP);
+    ledc_update_duty(LEDC_LOW_SPEED_MODE, LEDC_CHANNEL_0);
+}
+
+void display_msg(char *msg, int line,  SSD1306_t *dev, bool f) {
     // ssd1306_clear_screen(dev, false);
-    ssd1306_display_text(dev, 0, "                ", 16, false); // clear current line
-    ssd1306_display_text(dev, 0, msg, strlen(msg), false);
+    ssd1306_display_text(dev, line, "                ", 16, false); // clear current line
+    ssd1306_display_text(dev, line, msg, strlen(msg), false);
     if (f)
         free(msg);
 }
@@ -67,7 +96,7 @@ void display_soil_value(SSD1306_t *dev) {
 
     char msg[32];
     snprintf(msg, sizeof(msg), "water: %.2f %%", humidity);
-    display_msg(msg, dev, 0);
+    display_msg(msg, 0, dev, 0);
 }
 
 void app_main(void) {
@@ -80,10 +109,36 @@ void app_main(void) {
 
     adc_init();
 
+        ledc_timer_config_t timer_conf = {
+        .speed_mode       = LEDC_LOW_SPEED_MODE,
+        .duty_resolution  = LEDC_TIMER_16_BIT, // Résolution 16 bits
+        .timer_num        = LEDC_TIMER_0,
+        .freq_hz          = 50, // fréquence PWM pour servo
+        .clk_cfg          = LEDC_AUTO_CLK
+    };
+    ledc_timer_config(&timer_conf);
+
+    ledc_channel_config_t channel_conf = {
+        .speed_mode     = LEDC_LOW_SPEED_MODE,
+        .channel        = LEDC_CHANNEL_0,
+        .timer_sel      = LEDC_TIMER_0,
+        .intr_type      = LEDC_INTR_DISABLE,
+        .gpio_num       = SERVO_PIN,
+        .duty           = 0,   // duty initial
+        .hpoint         = 0
+    };
+    ledc_channel_config(&channel_conf);
+
+
     ssd1306_clear_screen(&dev, false);
     while (1) {
         display_soil_value(&dev);
-        vTaskDelay(200);
+        display_msg("run servo",1 ,&dev, false);
+        move_xms(450);
+        display_msg("arrose...",1 ,&dev, false);
+        vTaskDelay(pdMS_TO_TICKS(5000));
+        display_msg("reset servo", 1,&dev, false);
+        return_xms(450);
+        vTaskDelay(pdMS_TO_TICKS(5000));
     }
-    display_msg("18%", &dev, 0);
 }
